@@ -1,37 +1,65 @@
 import engine.Application;
 import engine.Window;
 import gfx.Shader;
-import gfx.Texture2D;
 import scene.RenderSystem;
 import scene.Scene;
 import scene.SceneLoader;
 import gfx.Camera;
-import gfx.MeshPNT;
+import util.EntityPicker;
+import world.Grid;
+import gfx.MeshUtils;
 
+import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL11;
+
+
+
 
 public class Main extends Application {
     private Shader shader;
     private Camera cam;
     private Scene scene;
     private RenderSystem renderer;
-    private Shader litShader;
-    private MeshPNT cubeMesh;
-    private Texture2D crateTex;      // any 512x512 or whatever
-    private final org.joml.Matrix4f tmpModel = new org.joml.Matrix4f();
-    
-    private final java.util.List<org.joml.Vector3f> placedCrates = new java.util.ArrayList<>();
-    private int selI = Integer.MIN_VALUE, selJ = Integer.MIN_VALUE;
-    private boolean prevMouseDown = false;
+  //grid + ground
+    private Grid grid;
+    private gfx.MeshPNT ground;
+    private gfx.Texture2D groundTex;
+    private gfx.Material groundMat; 
 
-    public Main(){ super(new Window(1280, 720, "Farm Game", true)); }
+    //tile highlight
+    private gfx.MeshPNT tileQuad;
+    private gfx.Shader flatShader;
+
+    //picking state
+    private final org.joml.Vector3f hoverPoint = new org.joml.Vector3f();
+    private final org.joml.Vector3f tileCenter = new org.joml.Vector3f();
+    private final org.joml.Matrix4f tileModel = new org.joml.Matrix4f();
+    private final org.joml.Matrix4f invViewProj = new org.joml.Matrix4f();
+    private final org.joml.Vector3f rayO = new org.joml.Vector3f();
+    private final org.joml.Vector3f rayD = new org.joml.Vector3f();
+    private int hoverI = Integer.MIN_VALUE, hoverJ = Integer.MIN_VALUE;
+
+
+    public Main(){ super(new Window(1280, 720, "Game engine", true)); }
 
     @Override protected void init() {
         GL11.glEnable(GL11.GL_DEPTH_TEST);
         GL11.glEnable(GL11.GL_CULL_FACE);
         GL11.glCullFace(GL11.GL_BACK);
+        
+        grid = new Grid(1.0f, -50f, -50f);                 
+        ground = MeshUtils.makeGroundPlane(100f, 100f);
+        groundTex = new gfx.Texture2D("res/textures/texture.png", true);
+        groundMat = new gfx.Material(groundTex);     
+
+        tileQuad = MeshUtils.makeUnitTileQuad();
+        flatShader = new gfx.Shader("res/shaders/flat_color.vert", "res/shaders/flat_color.frag");
+
+        org.lwjgl.opengl.GL11.glEnable(org.lwjgl.opengl.GL11.GL_BLEND);
+        org.lwjgl.opengl.GL11.glBlendFunc(org.lwjgl.opengl.GL11.GL_SRC_ALPHA, org.lwjgl.opengl.GL11.GL_ONE_MINUS_SRC_ALPHA);
+
 
         shader = new Shader("res/shaders/lit_textured.vert", "res/shaders/lit_textured.frag");
         renderer = new RenderSystem(shader);
@@ -48,10 +76,54 @@ public class Main extends Application {
         if (org.lwjgl.glfw.GLFW.glfwGetKey(window.handle(), GLFW.GLFW_KEY_RIGHT)== GLFW.GLFW_PRESS) cam.orbit(-0.015f, 0, 0);
         if (org.lwjgl.glfw.GLFW.glfwGetKey(window.handle(), GLFW.GLFW_KEY_UP)   == GLFW.GLFW_PRESS) cam.orbit(0, -0.01f, 0);
         if (org.lwjgl.glfw.GLFW.glfwGetKey(window.handle(), GLFW.GLFW_KEY_DOWN) == GLFW.GLFW_PRESS) cam.orbit(0,  0.01f, 0);
+        
+        invViewProj.set(cam.projMatrix()).mul(cam.viewMatrix()).invert();
+
+        // mouse → NDC
+        double mx = engine.Input.mouseX();
+        double my = engine.Input.mouseY();
+        float nx = (float)((mx / window.width()) * 2.0 - 1.0);
+        float ny = (float)(1.0 - (my / window.height()) * 2.0);
+
+        // ray
+        EntityPicker.rayFromNDC(nx, ny, invViewProj, rayO, rayD);
+
+        // ray ∩ ground (y=0)
+        boolean hit = EntityPicker.rayPlaneY(rayO, rayD, 0f, hoverPoint);
+        if (hit) {
+            int[] ij = new int[2];
+            grid.worldToCell(hoverPoint, ij);
+            hoverI = ij[0]; hoverJ = ij[1];
+
+            grid.cellCenter(hoverI, hoverJ, tileCenter);
+            tileModel.identity()
+                     .translate(tileCenter.x, 0.002f, tileCenter.z) 
+                     .scale(grid.cellSize(), 1f, grid.cellSize());
+        } else {
+            hoverI = hoverJ = Integer.MIN_VALUE;
+        }
+
     }
 
-    @Override protected void render() {
+    @Override
+    protected void render() {
         GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
+
+        // 1) draw ground
+        shader.bind();
+        shader.setMat4("uView", cam.viewMatrix());
+        shader.setMat4("uProj", cam.projMatrix());
+        shader.setMat4("uModel", new Matrix4f());
+        shader.setVec3("uSunDir", new Vector3f(-0.3f, -1.0f, -0.4f));
+        shader.setVec3("uSunColor", new Vector3f(1.0f, 0.97f, 0.92f));
+        shader.setFloat("uAmbient", 0.35f);
+        shader.setInt("uAlbedo", 0);
+        groundTex.bind(0);
+        shader.setVec3("uTint", new Vector3f(1,1,1));
+        ground.draw();
+        Shader.unbind();
+
+        // 2) draw scene
         renderer.render(
                 scene,
                 cam.viewMatrix(),
@@ -60,16 +132,35 @@ public class Main extends Application {
                 new Vector3f(1.0f, 0.97f, 0.92f),
                 0.25f
         );
+
+        // 3) draw hover highlight
+        if (hoverI != Integer.MIN_VALUE) {
+            flatShader.bind();
+            flatShader.setMat4("uView", cam.viewMatrix());
+            flatShader.setMat4("uProj", cam.projMatrix());
+            flatShader.setMat4("uModel", tileModel);
+            flatShader.setVec3("uColor", new Vector3f(0.2f, 0.7f, 1.0f));
+            flatShader.setFloat("uAlpha", 0.35f);
+            tileQuad.draw();
+            Shader.unbind();
+        }
     }
+
 
     @Override protected void shutdown() {
         try {
 			scene.close();
+			tileQuad.close();
+	        ground.close();
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
         shader.close();
+        
+        groundTex.close();
+        flatShader.close();
+
     }
 
     public static void main(String[] args) { new Main().run(); }

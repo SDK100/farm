@@ -1,7 +1,5 @@
 package gfx;
 
-import org.lwjgl.opengl.GL20;
-import org.lwjgl.opengl.GL30;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -83,6 +81,11 @@ public class Shader implements AutoCloseable {
 	public void setInt(String name, int v) {
 		int loc = glGetUniformLocation(program, name);
 		if (loc >= 0) glUniform1i(loc, v);
+	}
+	
+	public void setBool(String name, boolean v) {
+		int loc = glGetUniformLocation(program, name);
+		if (loc >= 0) glUniform1f(loc,v ? 1: 0);
 	}
 	
 	@Override public void close() {

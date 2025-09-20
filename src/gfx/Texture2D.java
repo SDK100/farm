@@ -21,6 +21,7 @@ public class Texture2D implements AutoCloseable {
 		int tex = glGenTextures();
 		glBindTexture(GL_TEXTURE_2D, tex);
 		
+		@SuppressWarnings("unused")
 		int w, h, comp;
 		try (var stack = stackPush()){
 			IntBuffer pw = stack.mallocInt(1);

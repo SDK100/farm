@@ -14,7 +14,7 @@ import java.util.Map;
 public final class SceneLoader {
     public static Scene load(String path) {
         J root = TinyJson.parseFile(path);
-        if (!(root instanceof JObj obj)) throw new RuntimeException("Scene root must be object");
+        if (!(root instanceof @SuppressWarnings("unused") JObj obj)) throw new RuntimeException("Scene root must be object");
 
         // caches so same mesh/texture reused
         Map<String, MeshPNT> meshCache = new HashMap<>();

@@ -1,7 +1,7 @@
 package scene;
 
-import assets.TinyJson.*;
-import assets.TinyJson;
+import assets.Json.*;
+import assets.Json;
 import assets.OBJLoader;
 import gfx.Material;
 import gfx.MeshPNT;
@@ -13,7 +13,7 @@ import java.util.Map;
 
 public final class SceneLoader {
     public static Scene load(String path) {
-        J root = TinyJson.parseFile(path);
+        J root = Json.parseFile(path);
         if (!(root instanceof @SuppressWarnings("unused") JObj obj)) throw new RuntimeException("Scene root must be object");
 
         // caches so same mesh/texture reused

@@ -2,10 +2,10 @@
   "entities": [
     {
       "obj": "res/models/cube.obj",
-      "albedo": "res/textures/texture.png",
+      "albedo": "res/textures/color.jpg",
       "position": [0, 0, 0],
-      "rotationEuler": [0, 0, 0],
-      "scale": [1, 1, 1],
+      "rotationEuler": [1, 0, 0],
+      "scale": [2, 1, 1],
       "tint": [1, 1, 1]
     }
     

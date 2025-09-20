@@ -5,7 +5,7 @@ import java.nio.file.Path;
 import java.util.*;
 
 /** Super-tiny JSON that supports objects, arrays, numbers, booleans, strings. Good enough for scene files. */
-public final class TinyJson {
+public final class Json {
     public sealed interface J permits JObj, JArr, JNum, JStr, JBool, JNull {}
     public static final class JObj implements J { public final Map<String,J> map = new LinkedHashMap<>(); public J get(String k){return map.get(k);} }
     public static final class JArr implements J { public final List<J> list = new ArrayList<>(); }

@@ -108,12 +108,16 @@ public class Main extends Application {
     @Override
     protected void render() {
         GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
+        boolean wasCull = GL11.glIsEnabled(GL11.GL_CULL_FACE);
+        if (wasCull) GL11.glDisable(GL11.GL_CULL_FACE);
 
         // 1) draw ground
         shader.bind();
         shader.setMat4("uView", cam.viewMatrix());
         shader.setMat4("uProj", cam.projMatrix());
-        shader.setMat4("uModel", new Matrix4f());
+        Matrix4f groundModel = new Matrix4f().translate(0f, -0.01f, 0f);
+
+        shader.setMat4("uModel", groundModel);
         shader.setVec3("uSunDir", new Vector3f(-0.3f, -1.0f, -0.4f));
         shader.setVec3("uSunColor", new Vector3f(1.0f, 0.97f, 0.92f));
         shader.setFloat("uAmbient", 0.35f);
@@ -122,6 +126,7 @@ public class Main extends Application {
         shader.setVec3("uTint", new Vector3f(1,1,1));
         ground.draw();
         Shader.unbind();
+        if (wasCull) GL11.glEnable(GL11.GL_CULL_FACE);
 
         // 2) draw scene
         renderer.render(

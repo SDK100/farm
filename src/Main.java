@@ -40,6 +40,13 @@ public class Main extends Application {
     private final org.joml.Vector3f rayO = new org.joml.Vector3f();
     private final org.joml.Vector3f rayD = new org.joml.Vector3f();
     private int hoverI = Integer.MIN_VALUE, hoverJ = Integer.MIN_VALUE;
+    
+    //selection state
+ // selection state
+    private int selectedI = Integer.MIN_VALUE, selectedJ = Integer.MIN_VALUE;
+    private final Matrix4f selectedModel = new Matrix4f();
+    private boolean prevLMB = false;
+
 
 
     public Main(){ super(new Window(1280, 720, "Game engine", true)); }
@@ -102,12 +109,31 @@ public class Main extends Application {
         } else {
             hoverI = hoverJ = Integer.MIN_VALUE;
         }
+        
+     // left-click to select tile
+        boolean mouseDown = GLFW.glfwGetMouseButton(window.handle(), GLFW.GLFW_MOUSE_BUTTON_LEFT) == GLFW.GLFW_PRESS;
+        if (mouseDown && hoverI != Integer.MIN_VALUE && hoverJ != Integer.MIN_VALUE) {
+            selectedI = hoverI;
+            selectedJ = hoverJ;
+            selectedModel.set(tileModel); // copy current hover transform
+        }
+        
+        
+
+        boolean lmb = GLFW.glfwGetMouseButton(window.handle(), GLFW.GLFW_MOUSE_BUTTON_LEFT) == GLFW.GLFW_PRESS;
+        if (lmb && !prevLMB && hoverI != Integer.MIN_VALUE) {
+            selectedI = hoverI; selectedJ = hoverJ;
+            selectedModel.set(tileModel); // copy current hover transform (includes the y-lift)
+        }
+        prevLMB = lmb;
+
 
     }
 
     @Override
     protected void render() {
         GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
+
         boolean wasCull = GL11.glIsEnabled(GL11.GL_CULL_FACE);
         if (wasCull) GL11.glDisable(GL11.GL_CULL_FACE);
 
@@ -116,7 +142,6 @@ public class Main extends Application {
         shader.setMat4("uView", cam.viewMatrix());
         shader.setMat4("uProj", cam.projMatrix());
         Matrix4f groundModel = new Matrix4f().translate(0f, -0.01f, 0f);
-
         shader.setMat4("uModel", groundModel);
         shader.setVec3("uSunDir", new Vector3f(-0.3f, -1.0f, -0.4f));
         shader.setVec3("uSunColor", new Vector3f(1.0f, 0.97f, 0.92f));
@@ -126,30 +151,58 @@ public class Main extends Application {
         shader.setVec3("uTint", new Vector3f(1,1,1));
         ground.draw();
         Shader.unbind();
+
         if (wasCull) GL11.glEnable(GL11.GL_CULL_FACE);
 
         // 2) draw scene
         renderer.render(
-                scene,
-                cam.viewMatrix(),
-                cam.projMatrix(),
-                new Vector3f(-0.3f, -1.0f, -0.4f),
-                new Vector3f(1.0f, 0.97f, 0.92f),
-                0.25f
+            scene,
+            cam.viewMatrix(),
+            cam.projMatrix(),
+            new Vector3f(-0.3f, -1.0f, -0.4f),
+            new Vector3f(1.0f, 0.97f, 0.92f),
+            0.25f
         );
 
-        // 3) draw hover highlight
+        // -------- Overlay state for tile highlights --------
+        GL11.glEnable(GL11.GL_BLEND);
+        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+        GL11.glEnable(GL11.GL_DEPTH_TEST);
+        GL11.glDepthMask(false); // don't write depth
+        GL11.glDisable(GL11.GL_CULL_FACE);
+        GL11.glEnable(GL11.GL_POLYGON_OFFSET_FILL);
+        GL11.glPolygonOffset(-1.0f, -1.0f); // pull forward
+
+        // 3) hover highlight (blue)
         if (hoverI != Integer.MIN_VALUE) {
             flatShader.bind();
             flatShader.setMat4("uView", cam.viewMatrix());
             flatShader.setMat4("uProj", cam.projMatrix());
-            flatShader.setMat4("uModel", tileModel);
+            flatShader.setMat4("uModel", tileModel); // be sure tileModel's Y-lift is ~0.01f
             flatShader.setVec3("uColor", new Vector3f(0.2f, 0.7f, 1.0f));
             flatShader.setFloat("uAlpha", 0.35f);
             tileQuad.draw();
             Shader.unbind();
         }
+
+        // 4) selected highlight (orange) — draw AFTER hover so it wins visually
+        if (selectedI != Integer.MIN_VALUE) {
+            flatShader.bind();
+            flatShader.setMat4("uView", cam.viewMatrix());
+            flatShader.setMat4("uProj", cam.projMatrix());
+            flatShader.setMat4("uModel", selectedModel);
+            flatShader.setVec3("uColor", new Vector3f(1.0f, 0.5f, 0.0f));
+            flatShader.setFloat("uAlpha", 0.55f);
+            tileQuad.draw();
+            Shader.unbind();
+        }
+
+        // -------- restore state --------
+        GL11.glDisable(GL11.GL_POLYGON_OFFSET_FILL);
+        GL11.glDepthMask(true);
+        if (wasCull) GL11.glEnable(GL11.GL_CULL_FACE);
     }
+
 
 
     @Override protected void shutdown() {

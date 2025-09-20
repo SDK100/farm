@@ -1,0 +1,13 @@
+{
+  "entities": [
+    {
+      "obj": "res/models/cube.obj",
+      "albedo": "res/textures/texture.png",
+      "position": [0, 0, 0],
+      "rotationEuler": [0, 0, 0],
+      "scale": [1, 1, 1],
+      "tint": [1, 1, 1]
+    }
+    
+  ]
+}

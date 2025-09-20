@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-21">
+		<attributes>
+			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="C:/Users/seth/Desktop/lwjgl3/natives"/>
+			<attribute name="module" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="lib" path="C:/Users/seth/Desktop/lwjgl3/jars/lwjgl.jar"/>
+	<classpathentry kind="lib" path="C:/Users/seth/Desktop/lwjgl3/jars/lwjgl-glfw.jar"/>
+	<classpathentry kind="lib" path="C:/Users/seth/Desktop/lwjgl3/jars/lwjgl-opengl.jar"/>
+	<classpathentry kind="lib" path="C:/Users/seth/Desktop/lwjgl3/jars/joml-1.10.8.jar"/>
+	<classpathentry kind="lib" path="C:/Users/seth/Desktop/lwjgl3/natives/lwjgl-glfw-natives-windows.jar"/>
+	<classpathentry kind="lib" path="C:/Users/seth/Desktop/lwjgl3/natives/lwjgl-natives-windows.jar"/>
+	<classpathentry kind="lib" path="C:/Users/seth/Desktop/lwjgl3/natives/lwjgl-opengl-natives-windows.jar"/>
+	<classpathentry kind="lib" path="C:/Users/seth/Desktop/lwjgl3/jars/lwjgl-stb.jar"/>
+	<classpathentry kind="lib" path="C:/Users/seth/Desktop/lwjgl3/jars/lwjgl-stb-natives-windows.jar"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>

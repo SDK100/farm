@@ -74,8 +74,8 @@ public class Main extends Application {
         // simple orbit with arrow keys for demo
         if (org.lwjgl.glfw.GLFW.glfwGetKey(window.handle(), GLFW.GLFW_KEY_LEFT) == GLFW.GLFW_PRESS) cam.orbit( 0.015f, 0, 0);
         if (org.lwjgl.glfw.GLFW.glfwGetKey(window.handle(), GLFW.GLFW_KEY_RIGHT)== GLFW.GLFW_PRESS) cam.orbit(-0.015f, 0, 0);
-        if (org.lwjgl.glfw.GLFW.glfwGetKey(window.handle(), GLFW.GLFW_KEY_UP)   == GLFW.GLFW_PRESS) cam.orbit(0, -0.01f, 0);
-        if (org.lwjgl.glfw.GLFW.glfwGetKey(window.handle(), GLFW.GLFW_KEY_DOWN) == GLFW.GLFW_PRESS) cam.orbit(0,  0.01f, 0);
+        if (org.lwjgl.glfw.GLFW.glfwGetKey(window.handle(), GLFW.GLFW_KEY_UP)   == GLFW.GLFW_PRESS) cam.orbit(0, 0.01f, 0);
+        if (org.lwjgl.glfw.GLFW.glfwGetKey(window.handle(), GLFW.GLFW_KEY_DOWN) == GLFW.GLFW_PRESS) cam.orbit(0,  -0.01f, 0);
         
         invViewProj.set(cam.projMatrix()).mul(cam.viewMatrix()).invert();
 
